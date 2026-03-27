@@ -26,45 +26,27 @@
         </button>
       </div>
 
-      <!-- Nav sections -->
+      <!-- Nav -->
       <nav class="sb-nav">
-        <template v-for="(section, si) in navSections" :key="si">
-          <!-- Section label -->
-          <div v-if="section.sectionLabel && !isCollapsed" class="nav-section-label">{{ section.sectionLabel }}</div>
-          <div v-else-if="section.sectionLabel && isCollapsed && si > 0" class="nav-section-divider"></div>
+        <template v-for="(item, i) in flatNav" :key="i">
+          <!-- Separator -->
+          <div v-if="item.type === 'separator' && !isCollapsed" class="nav-sep">{{ item.label }}</div>
+          <div v-else-if="item.type === 'separator' && isCollapsed && i > 0" class="nav-sep-line"></div>
 
-          <!-- Items -->
-          <template v-for="(item, ii) in (section.items || [])" :key="si+'-'+ii">
-            <!-- Main nav button -->
-            <button
-              class="nav-btn"
-              :class="{ active: isNavActive(item), 'has-children': item.children && item.children.length }"
-              @click="onNavClick(item, si, ii)"
-              :title="isCollapsed ? item.label : undefined"
-            >
-              <span class="nav-icon" :style="{ width: content.navIconSize || '18px', height: content.navIconSize || '18px' }">
-                <span v-if="getResolvedIcon(si, ii)" v-html="getResolvedIcon(si, ii)" class="icon-wrap"></span>
-                <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
-              </span>
-              <span v-if="!isCollapsed" class="nav-label">{{ item.label }}</span>
-              <!-- Expand arrow for items with children -->
-              <svg v-if="!isCollapsed && item.children && item.children.length" class="nav-arrow" :class="{ open: isExpanded(si, ii) }" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-            </button>
+          <!-- Regular item -->
+          <button v-else-if="item.type === 'item'" class="nav-btn" :class="{ active: isNavActive(item) }" @click="onNavClick(item, i)" :title="isCollapsed ? item.label : undefined">
+            <span class="nav-icon" :style="{ width: content.navIconSize || '18px', height: content.navIconSize || '18px' }">
+              <span v-if="resolvedIcons[i]" v-html="resolvedIcons[i]" class="icon-wrap"></span>
+              <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+            </span>
+            <span v-if="!isCollapsed" class="nav-label">{{ item.label }}</span>
+          </button>
 
-            <!-- Sub-items -->
-            <div v-if="!isCollapsed && item.children && item.children.length && isExpanded(si, ii)" class="nav-children">
-              <button
-                v-for="(child, ci) in item.children"
-                :key="ci"
-                class="nav-child"
-                :class="{ active: isChildActive(child) }"
-                @click="onChildClick(child, si, ii, ci)"
-              >
-                <span class="nav-child-dot"></span>
-                <span class="nav-label">{{ child.label }}</span>
-              </button>
-            </div>
-          </template>
+          <!-- Child (sub-item) -->
+          <button v-else-if="item.type === 'child' && !isCollapsed" class="nav-child" :class="{ active: isNavActive(item) }" @click="onNavClick(item, i)">
+            <span class="child-dot"></span>
+            <span class="nav-label">{{ item.label }}</span>
+          </button>
         </template>
       </nav>
 
@@ -73,16 +55,16 @@
 
       <div class="sb-spacer"></div>
 
-      <!-- Theme toggle -->
+      <!-- Theme -->
       <button class="theme-btn" @click="toggleTheme">
-        <span class="theme-btn-icon">
+        <span class="theme-icon">
           <svg v-if="currentTheme==='dark'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
           <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>
         </span>
         <span v-if="!isCollapsed" class="nav-label">{{ currentTheme === 'dark' ? 'Jasny motyw' : 'Ciemny motyw' }}</span>
       </button>
 
-      <!-- User block -->
+      <!-- User -->
       <div v-if="content.showUserBlock !== false" class="user-block">
         <div class="user-avatar">{{ userInitials }}</div>
         <template v-if="!isCollapsed">
@@ -109,7 +91,6 @@ export default {
       windowWidth: typeof window !== 'undefined' ? window.innerWidth : 1200,
       currentTheme: 'dark',
       sidebarCollapsed: false,
-      expandedItems: {},
       supabase: null, userName: '', userEmail: '',
       resolvedIcons: {},
       _initBusy: false,
@@ -125,7 +106,7 @@ export default {
         mobileHidden: this.isMobile && !this.content.isMobileMenuOpen,
       };
     },
-    navSections() { return this.content.navSections || []; },
+    flatNav() { return this.content.navItems || []; },
     userInitials() {
       if (!this.userName) return '?';
       return this.userName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
@@ -150,7 +131,7 @@ export default {
     'content.supabaseUrl'() { this.initSupa(); },
     'content.supabaseAnonKey'() { this.initSupa(); },
     'content.theme'(v) { if (v && v !== this.currentTheme) this.setTheme(v); },
-    'content.navSections': { handler() { this.resolveAllIcons(); }, deep: true },
+    'content.navItems': { handler() { this.resolveAllIcons(); }, deep: true },
   },
   mounted() {
     this.sidebarCollapsed = !!this.content?.isSidebarCollapsed;
@@ -172,46 +153,30 @@ export default {
     document.body.style.paddingTop = '';
   },
   methods: {
-    /* ── Icons (wwLib.useIcons pattern from admin panel) ── */
-    async resolveIcon(key, val) {
-      if (!val) { this.resolvedIcons = { ...this.resolvedIcons, [key]: '' }; return; }
+    /* Icons */
+    async resolveIcon(index, val) {
+      if (!val) { this.resolvedIcons = { ...this.resolvedIcons, [index]: '' }; return; }
       try {
         if (typeof wwLib !== 'undefined' && wwLib.useIcons) {
           const { getIcon } = wwLib.useIcons();
           const svg = await getIcon(val);
-          this.resolvedIcons = { ...this.resolvedIcons, [key]: svg || '' };
+          this.resolvedIcons = { ...this.resolvedIcons, [index]: svg || '' };
         } else {
           const s = String(val).replace(/\//g, ':');
           if (/^[a-zA-Z0-9:\-]+$/.test(s)) {
-            this.resolvedIcons = { ...this.resolvedIcons, [key]: `<img src="https://api.iconify.design/${s}.svg" style="width:100%;height:100%;object-fit:contain"/>` };
+            this.resolvedIcons = { ...this.resolvedIcons, [index]: `<img src="https://api.iconify.design/${s}.svg" style="width:100%;height:100%;object-fit:contain"/>` };
           }
         }
-      } catch (e) {
-        this.resolvedIcons = { ...this.resolvedIcons, [key]: '' };
-      }
+      } catch (e) { this.resolvedIcons = { ...this.resolvedIcons, [index]: '' }; }
     },
     resolveAllIcons() {
-      const sections = this.navSections;
-      for (let si = 0; si < sections.length; si++) {
-        const items = sections[si].items || [];
-        for (let ii = 0; ii < items.length; ii++) {
-          const key = `icon_${si}_${ii}`;
-          this.resolveIcon(key, items[ii].icon);
-        }
+      const items = this.flatNav;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type === 'item' && items[i].icon) this.resolveIcon(i, items[i].icon);
       }
     },
-    getResolvedIcon(si, ii) {
-      return this.resolvedIcons[`icon_${si}_${ii}`] || '';
-    },
 
-    /* ── Expand/collapse sub-items ── */
-    isExpanded(si, ii) { return !!this.expandedItems[`${si}_${ii}`]; },
-    toggleExpand(si, ii) {
-      const key = `${si}_${ii}`;
-      this.expandedItems = { ...this.expandedItems, [key]: !this.expandedItems[key] };
-    },
-
-    /* ── Navigation ── */
+    /* Nav */
     isNavActive(item) {
       if (!item.link) return false;
       try {
@@ -224,34 +189,10 @@ export default {
       } catch (e) {}
       return false;
     },
-    isChildActive(child) {
-      if (!child.link) return false;
-      try {
-        if (child.link.pageId && typeof wwLib !== 'undefined') {
-          const cur = wwLib?.wwWebsiteData?.page?.id;
-          if (cur && child.link.pageId === cur) return true;
-        }
-        const p = window.location.pathname;
-        if (child.link.href) return p === child.link.href || p.startsWith(child.link.href + '/');
-      } catch (e) {}
-      return false;
-    },
-    onNavClick(item, si, ii) {
-      // If has children, toggle expand
-      if (item.children && item.children.length) {
-        this.toggleExpand(si, ii);
-        // If also has a link, navigate
-        if (item.link) this.navigateTo(item.link);
-        return;
-      }
-      this.$emit('trigger-event', { name: 'navClick', event: { url: item.link?.href || '', label: item.label, sectionKey: `${si}_${ii}` } });
+    onNavClick(item, i) {
+      this.$emit('trigger-event', { name: 'navClick', event: { url: item.link?.href || '', label: item.label, index: i } });
       if (this.isMobile) this.closeMobile();
       if (item.link) this.navigateTo(item.link);
-    },
-    onChildClick(child, si, ii, ci) {
-      this.$emit('trigger-event', { name: 'navClick', event: { url: child.link?.href || '', label: child.label, sectionKey: `${si}_${ii}_${ci}` } });
-      if (this.isMobile) this.closeMobile();
-      if (child.link) this.navigateTo(child.link);
     },
     navigateTo(link) {
       if (!link) return;
@@ -260,25 +201,20 @@ export default {
           if (link.pageId) { wwLib.goTo(link.pageId, link.parameters, link.query); return; }
           if (link.href) { wwLib.goTo(link.href); return; }
         }
-        if (link.type === 'external' && link.href) {
-          window.open(link.href, link.targetBlank ? '_blank' : '_self');
-        } else if (link.href) {
-          window.location.href = link.href;
-        }
-      } catch (e) {
-        if (link.href) window.location.href = link.href;
-      }
+        if (link.type === 'external' && link.href) window.open(link.href, link.targetBlank ? '_blank' : '_self');
+        else if (link.href) window.location.href = link.href;
+      } catch (e) { if (link.href) window.location.href = link.href; }
     },
     closeMobile() { this.$emit('trigger-event', { name: 'overlayClick' }); },
 
-    /* ── Collapse ── */
+    /* Collapse */
     toggleCollapse() {
       this.sidebarCollapsed = !this.sidebarCollapsed;
       this.$emit('trigger-event', { name: 'collapseToggle', event: { collapsed: this.sidebarCollapsed } });
       this.updateLayout();
     },
 
-    /* ── Theme ── */
+    /* Theme */
     toggleTheme() {
       this.setTheme(this.currentTheme === 'dark' ? 'light' : 'dark');
       this.$emit('trigger-event', { name: 'themeChange', event: { theme: this.currentTheme } });
@@ -294,7 +230,7 @@ export default {
     },
     onStorage(e) { if (e.key === 'app-theme' && e.newValue) this.setTheme(e.newValue); },
 
-    /* ── Layout ── */
+    /* Layout */
     updateLayout() {
       if (!document.body.style.transition.includes('padding')) {
         document.body.style.transition += (document.body.style.transition ? ', ' : '') + 'padding-left 200ms cubic-bezier(0.16,1,0.3,1)';
@@ -304,19 +240,17 @@ export default {
         document.body.style.paddingTop = (this.content.topbarHeight || '52px');
       } else {
         document.body.style.paddingTop = '0px';
-        document.body.style.paddingLeft = this.isCollapsed
-          ? (this.content.sidebarCollapsedWidth || '64px')
-          : (this.content.sidebarWidth || '240px');
+        document.body.style.paddingLeft = this.isCollapsed ? (this.content.sidebarCollapsedWidth || '64px') : (this.content.sidebarWidth || '240px');
       }
     },
 
-    /* ── Scroll ── */
+    /* Scroll */
     onResize() { this.windowWidth = window.innerWidth; },
     checkScroll() { this.isMobile && this.content.isMobileMenuOpen ? this.lockScroll() : this.unlockScroll(); },
     lockScroll() { document.body.style.setProperty('overflow', 'hidden', 'important'); document.documentElement.style.setProperty('overflow', 'hidden', 'important'); },
     unlockScroll() { document.body.style.overflow = ''; document.documentElement.style.overflow = ''; },
 
-    /* ── Supabase ── */
+    /* Supabase */
     async initSupa() {
       if (this._initBusy) return; this._initBusy = true;
       try {
@@ -347,136 +281,96 @@ export default {
 
 <style scoped>
 /* ═══ DARK ═══ */
-.nav-shell[data-theme="dark"] {
-  --bg:#111113; --raised:#18181b; --card:#1c1c20;
-  --brd:#27272a; --brd-l:rgba(255,255,255,0.04);
-  --tx:#ececec; --tx2:#a1a1aa; --tx3:#71717a; --tx4:#52525b;
-  --acc:#4B8765; --acc-h:rgba(75,135,101,0.10);
-  --sb-bg:#141416; --tb-bg:rgba(20,20,22,0.88);
-  --ov-bg:rgba(0,0,0,0.6);
-  --n-active:#6BAA85; --n-active-bg:rgba(75,135,101,0.12);
-  --n-hover:rgba(75,135,101,0.06); --n-muted:#71717a;
-  --scroll:#27272a; --danger:#ef4444;
-  --shadow:0 1px 3px rgba(0,0,0,0.3);
-  --ease:cubic-bezier(0.16,1,0.3,1);
-  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  color-scheme:dark;
-}
+.nav-shell[data-theme="dark"]{--bg:#111113;--raised:#18181b;--card:#1c1c20;--brd:#27272a;--brd-l:rgba(255,255,255,0.04);--tx:#ececec;--tx2:#a1a1aa;--tx3:#71717a;--tx4:#52525b;--acc:#4B8765;--acc-h:rgba(75,135,101,0.10);--sb-bg:#141416;--tb-bg:rgba(20,20,22,0.88);--ov-bg:rgba(0,0,0,0.6);--n-active:#6BAA85;--n-active-bg:rgba(75,135,101,0.12);--n-hover:rgba(75,135,101,0.06);--n-muted:#71717a;--scroll:#27272a;--danger:#ef4444;--shadow:0 1px 3px rgba(0,0,0,0.3);--ease:cubic-bezier(0.16,1,0.3,1);--font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color-scheme:dark}
 /* ═══ LIGHT ═══ */
-.nav-shell[data-theme="light"] {
-  --bg:#f8f9fa; --raised:#fff; --card:#fff;
-  --brd:#e4e4e7; --brd-l:#f4f4f5;
-  --tx:#18181b; --tx2:#52525b; --tx3:#71717a; --tx4:#a1a1aa;
-  --acc:#4B8765; --acc-h:rgba(75,135,101,0.08);
-  --sb-bg:#fff; --tb-bg:rgba(255,255,255,0.88);
-  --ov-bg:rgba(0,0,0,0.32);
-  --n-active:#3d7254; --n-active-bg:rgba(75,135,101,0.09);
-  --n-hover:rgba(75,135,101,0.05); --n-muted:#71717a;
-  --scroll:#d4d4d8; --danger:#dc2626;
-  --shadow:0 1px 3px rgba(0,0,0,0.06);
-  --ease:cubic-bezier(0.16,1,0.3,1);
-  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  color-scheme:light;
-}
+.nav-shell[data-theme="light"]{--bg:#f8f9fa;--raised:#fff;--card:#fff;--brd:#e4e4e7;--brd-l:#f4f4f5;--tx:#18181b;--tx2:#52525b;--tx3:#71717a;--tx4:#a1a1aa;--acc:#4B8765;--acc-h:rgba(75,135,101,0.08);--sb-bg:#fff;--tb-bg:rgba(255,255,255,0.88);--ov-bg:rgba(0,0,0,0.32);--n-active:#3d7254;--n-active-bg:rgba(75,135,101,0.09);--n-hover:rgba(75,135,101,0.05);--n-muted:#71717a;--scroll:#d4d4d8;--danger:#dc2626;--shadow:0 1px 3px rgba(0,0,0,0.06);--ease:cubic-bezier(0.16,1,0.3,1);--font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color-scheme:light}
 
-/* ═══ BASE ═══ */
-.nav-shell { position:absolute; top:0; left:0; width:100vw; height:0; z-index:9000; pointer-events:none; font-family:var(--font); font-size:13px; color:var(--tx); }
-.topbar,.sidebar,.overlay { pointer-events:auto; }
+/* BASE */
+.nav-shell{position:absolute;top:0;left:0;width:100vw;height:0;z-index:9000;pointer-events:none;font-family:var(--font);font-size:13px;color:var(--tx)}
+.topbar,.sidebar,.overlay{pointer-events:auto}
 
-/* ═══ MOBILE TOPBAR ═══ */
-.topbar { display:flex; align-items:center; position:fixed; top:0; left:0; width:100vw; height:var(--th); background:var(--tb-bg); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-bottom:1px solid var(--brd); box-shadow:var(--shadow); z-index:1005; box-sizing:border-box; padding:0 8px; }
-.toggle-zone { display:flex; align-items:stretch; min-height:100%; }
-.topbar-title { flex:1; font-weight:600; padding:0 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.tb-btn { width:36px; height:36px; border-radius:8px; background:transparent; border:1px solid var(--brd); color:var(--tx3); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 200ms var(--ease); flex-shrink:0; }
-.tb-btn:hover { border-color:var(--acc); color:var(--tx); background:var(--acc-h); }
+/* TOPBAR */
+.topbar{display:flex;align-items:center;position:fixed;top:0;left:0;width:100vw;height:var(--th);background:var(--tb-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--brd);box-shadow:var(--shadow);z-index:1005;box-sizing:border-box;padding:0 8px}
+.toggle-zone{display:flex;align-items:stretch;min-height:100%}
+.topbar-title{flex:1;font-weight:600;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-btn{width:36px;height:36px;border-radius:8px;background:transparent;border:1px solid var(--brd);color:var(--tx3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 200ms var(--ease);flex-shrink:0}
+.tb-btn:hover{border-color:var(--acc);color:var(--tx);background:var(--acc-h)}
 
-/* ═══ OVERLAY ═══ */
-.overlay { position:fixed; inset:0; background:var(--ov-bg); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); z-index:999; cursor:pointer; }
-.ov-enter-active { animation:fadeIn var(--anim) var(--ease); }
-.ov-leave-active { animation:fadeOut 180ms ease forwards; }
-@keyframes fadeIn { from{opacity:0} to{opacity:1} }
-@keyframes fadeOut { from{opacity:1} to{opacity:0} }
+/* OVERLAY */
+.overlay{position:fixed;inset:0;background:var(--ov-bg);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:999;cursor:pointer}
+.ov-enter-active{animation:fadeIn var(--anim) var(--ease)}.ov-leave-active{animation:fadeOut 180ms ease forwards}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes fadeOut{from{opacity:1}to{opacity:0}}
 
-/* ═══ SIDEBAR ═══ */
-.sidebar { display:flex; flex-direction:column; position:fixed; top:0; left:0; width:var(--sw); height:100vh; height:100dvh; background:var(--sb-bg); border-right:1px solid var(--brd); z-index:1000; box-sizing:border-box; transition:width var(--anim) var(--ease),transform var(--anim) var(--ease); overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; }
-.sidebar.collapsed { width:var(--scw); }
-.sidebar.mobileHidden { top:var(--th); height:calc(100dvh - var(--th)); transform:translateX(-100%); }
-.sidebar.mobileOpen { top:var(--th); height:calc(100dvh - var(--th)); transform:translateX(0); box-shadow:4px 0 24px rgba(0,0,0,0.18); }
+/* SIDEBAR */
+.sidebar{display:flex;flex-direction:column;position:fixed;top:0;left:0;width:var(--sw);height:100vh;height:100dvh;background:var(--sb-bg);border-right:1px solid var(--brd);z-index:1000;box-sizing:border-box;transition:width var(--anim) var(--ease),transform var(--anim) var(--ease);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+.sidebar.collapsed{width:var(--scw)}
+.sidebar.mobileHidden{top:var(--th);height:calc(100dvh - var(--th));transform:translateX(-100%)}
+.sidebar.mobileOpen{top:var(--th);height:calc(100dvh - var(--th));transform:translateX(0);box-shadow:4px 0 24px rgba(0,0,0,0.18)}
 
 /* Brand */
-.sb-brand { display:flex; align-items:center; gap:8px; padding:20px 16px 16px; border-bottom:1px solid var(--brd); }
-.sb-title { font-weight:700; letter-spacing:-0.4px; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.sb-toggle { width:28px; height:28px; border-radius:6px; background:transparent; border:1px solid var(--brd); color:var(--tx3); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 200ms var(--ease); flex-shrink:0; }
-.sb-toggle:hover { border-color:var(--acc); color:var(--tx); background:var(--acc-h); }
-.sidebar.collapsed .sb-brand { justify-content:center; padding:20px 8px 16px; }
-.sidebar.collapsed .sb-toggle { border-color:transparent; }
+.sb-brand{display:flex;align-items:center;gap:8px;padding:20px 16px 16px;border-bottom:1px solid var(--brd)}
+.sb-title{font-weight:700;letter-spacing:-0.4px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-toggle{width:28px;height:28px;border-radius:6px;background:transparent;border:1px solid var(--brd);color:var(--tx3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 200ms var(--ease);flex-shrink:0}
+.sb-toggle:hover{border-color:var(--acc);color:var(--tx);background:var(--acc-h)}
+.sidebar.collapsed .sb-brand{justify-content:center;padding:20px 8px 16px}
+.sidebar.collapsed .sb-toggle{border-color:transparent}
 
-/* ═══ NAV ═══ */
-.sb-nav { padding:8px; display:flex; flex-direction:column; gap:1px; }
+/* NAV */
+.sb-nav{padding:8px;display:flex;flex-direction:column;gap:1px}
 
-/* Section labels & dividers */
-.nav-section-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.8px; color:var(--tx4); padding:16px 12px 6px; }
-.nav-section-divider { height:1px; background:var(--brd); margin:8px 12px; }
+/* Separator */
+.nav-sep{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--tx4);padding:16px 12px 6px}
+.nav-sep-line{height:1px;background:var(--brd);margin:8px 12px}
 
-/* Nav button */
-.nav-btn { display:flex; align-items:center; gap:10px; width:100%; padding:10px 12px; background:transparent; border:0; border-radius:8px; cursor:pointer; color:var(--n-muted); font-size:13px; font-family:var(--font); text-align:left; transition:all 200ms var(--ease); white-space:nowrap; overflow:hidden; }
-.nav-btn:hover { background:var(--n-hover); color:var(--tx); }
-.nav-btn.active { background:var(--n-active-bg); color:var(--n-active); font-weight:600; }
-.nav-btn:focus-visible { outline:2px solid var(--acc); outline-offset:2px; }
-.sidebar.collapsed .nav-btn { justify-content:center; padding:10px; }
+/* Nav button (matches admin panel) */
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;background:transparent;border:0;border-radius:8px;cursor:pointer;color:var(--n-muted);font-size:13px;font-family:var(--font);text-align:left;transition:all 200ms var(--ease);white-space:nowrap;overflow:hidden}
+.nav-btn:hover{background:var(--n-hover);color:var(--tx)}
+.nav-btn.active{background:var(--n-active-bg);color:var(--n-active);font-weight:600}
+.nav-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.sidebar.collapsed .nav-btn{justify-content:center;padding:10px}
 
-/* Nav icon */
-.nav-icon { flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; opacity:.7; line-height:0; }
-.nav-btn.active .nav-icon { opacity:1; }
-.icon-wrap { display:inline-flex; align-items:center; justify-content:center; width:100%; height:100%; line-height:0; }
-.icon-wrap :deep(svg) { width:100%; height:100%; }
-.icon-wrap :deep(img) { width:100%; height:100%; object-fit:contain; }
-.nav-label { overflow:hidden; text-overflow:ellipsis; flex:1; }
+/* Icon */
+.nav-icon{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;opacity:.7;line-height:0}
+.nav-btn.active .nav-icon{opacity:1}
+.icon-wrap{display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;line-height:0}
+.icon-wrap :deep(svg){width:100%;height:100%}
+.icon-wrap :deep(img){width:100%;height:100%;object-fit:contain}
+.nav-label{overflow:hidden;text-overflow:ellipsis;flex:1}
 
-/* Expand arrow */
-.nav-arrow { flex-shrink:0; opacity:.5; transition:transform 200ms var(--ease); margin-left:auto; }
-.nav-arrow.open { transform:rotate(180deg); }
-
-/* Sub-items */
-.nav-children { padding:2px 0 2px 0; }
-.nav-child { display:flex; align-items:center; gap:8px; width:100%; padding:7px 12px 7px 22px; background:transparent; border:0; border-radius:6px; cursor:pointer; color:var(--tx4); font-size:12px; font-family:var(--font); text-align:left; transition:all 200ms var(--ease); white-space:nowrap; overflow:hidden; }
-.nav-child:hover { background:var(--n-hover); color:var(--tx); }
-.nav-child.active { color:var(--n-active); font-weight:600; }
-.nav-child-dot { width:4px; height:4px; border-radius:50%; background:var(--tx4); flex-shrink:0; transition:background 200ms; }
-.nav-child.active .nav-child-dot { background:var(--n-active); }
+/* Child (sub-item) */
+.nav-child{display:flex;align-items:center;gap:8px;width:100%;padding:7px 12px 7px 40px;background:transparent;border:0;border-radius:6px;cursor:pointer;color:var(--tx4);font-size:12px;font-family:var(--font);text-align:left;transition:all 200ms var(--ease);white-space:nowrap;overflow:hidden}
+.nav-child:hover{background:var(--n-hover);color:var(--tx)}
+.nav-child.active{color:var(--n-active);font-weight:600}
+.child-dot{width:4px;height:4px;border-radius:50%;background:var(--tx4);flex-shrink:0;transition:background 200ms}
+.nav-child.active .child-dot{background:var(--n-active)}
 
 /* Extra */
-.sb-extra { padding:0 8px; }
-.sb-extra-inner { display:flex; flex-direction:column; width:100%; }
-.sb-spacer { flex:1; min-height:8px; }
+.sb-extra{padding:0 8px}.sb-extra-inner{display:flex;flex-direction:column;width:100%}
+.sb-spacer{flex:1;min-height:8px}
 
-/* Theme button */
-.theme-btn { display:flex; align-items:center; gap:10px; width:calc(100% - 16px); margin:0 8px 8px; padding:10px 12px; background:transparent; border:1px solid var(--brd); border-radius:8px; cursor:pointer; color:var(--tx3); font-size:13px; font-family:var(--font); text-align:left; transition:all 200ms var(--ease); white-space:nowrap; overflow:hidden; }
-.theme-btn:hover { border-color:var(--acc); color:var(--tx); background:var(--acc-h); }
-.theme-btn-icon { width:18px; height:18px; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; line-height:0; }
-.sidebar.collapsed .theme-btn { justify-content:center; width:calc(100% - 16px); padding:10px; border-color:transparent; margin-bottom:4px; }
+/* Theme */
+.theme-btn{display:flex;align-items:center;gap:10px;width:calc(100% - 16px);margin:0 8px 8px;padding:10px 12px;background:transparent;border:1px solid var(--brd);border-radius:8px;cursor:pointer;color:var(--tx3);font-size:13px;font-family:var(--font);text-align:left;transition:all 200ms var(--ease);white-space:nowrap;overflow:hidden}
+.theme-btn:hover{border-color:var(--acc);color:var(--tx);background:var(--acc-h)}
+.theme-icon{width:18px;height:18px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;line-height:0}
+.sidebar.collapsed .theme-btn{justify-content:center;width:calc(100% - 16px);padding:10px;border-color:transparent;margin-bottom:4px}
 
-/* User block */
-.user-block { display:flex; align-items:center; gap:10px; padding:12px 16px; border-top:1px solid var(--brd); }
-.sidebar.collapsed .user-block { justify-content:center; padding:12px 8px; }
-.user-avatar { width:32px; height:32px; border-radius:50%; background:var(--acc); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; letter-spacing:.5px; }
-.user-info { flex:1; min-width:0; overflow:hidden; }
-.user-name { font-size:13px; font-weight:600; color:var(--tx); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.user-email { font-size:11px; color:var(--tx3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
-.logout-btn { width:28px; height:28px; border-radius:6px; background:transparent; border:1px solid transparent; color:var(--tx3); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 200ms var(--ease); flex-shrink:0; }
-.logout-btn:hover { border-color:var(--danger); color:var(--danger); background:rgba(239,68,68,0.08); }
+/* User */
+.user-block{display:flex;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid var(--brd)}
+.sidebar.collapsed .user-block{justify-content:center;padding:12px 8px}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;letter-spacing:.5px}
+.user-info{flex:1;min-width:0;overflow:hidden}
+.user-name{font-size:13px;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-email{font-size:11px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.logout-btn{width:28px;height:28px;border-radius:6px;background:transparent;border:1px solid transparent;color:var(--tx3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 200ms var(--ease);flex-shrink:0}
+.logout-btn:hover{border-color:var(--danger);color:var(--danger);background:rgba(239,68,68,0.08)}
 
 /* Scrollbar */
-.sidebar::-webkit-scrollbar { width:4px; }
-.sidebar::-webkit-scrollbar-track { background:transparent; }
-.sidebar::-webkit-scrollbar-thumb { background:var(--scroll); border-radius:2px; }
+.sidebar::-webkit-scrollbar{width:4px}.sidebar::-webkit-scrollbar-track{background:transparent}.sidebar::-webkit-scrollbar-thumb{background:var(--scroll);border-radius:2px}
 
-/* Light overrides */
-.nav-shell[data-theme="light"] .sidebar { box-shadow:1px 0 2px rgba(0,0,0,0.04); }
-.nav-shell[data-theme="light"] .topbar { box-shadow:0 1px 2px rgba(0,0,0,0.05); }
+/* Light */
+.nav-shell[data-theme="light"] .sidebar{box-shadow:1px 0 2px rgba(0,0,0,0.04)}
+.nav-shell[data-theme="light"] .topbar{box-shadow:0 1px 2px rgba(0,0,0,0.05)}
 
 /* Mobile */
-@media(max-width:991px) {
-  .sidebar.mobileOpen .nav-label, .sidebar.mobileOpen .user-info, .sidebar.mobileOpen .sb-extra { opacity:1!important; width:auto!important; }
-}
+@media(max-width:991px){.sidebar.mobileOpen .nav-label,.sidebar.mobileOpen .user-info,.sidebar.mobileOpen .sb-extra{opacity:1!important;width:auto!important}}
 </style>
