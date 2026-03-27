@@ -294,25 +294,10 @@ export default {
       if (!link) return;
       try {
         if (typeof wwLib !== 'undefined' && link.pageId) {
-          // Build query
           let qs = '';
           if (Array.isArray(link.query) && link.query.length) {
             qs = '?' + link.query.map(q => encodeURIComponent(q.name) + '=' + encodeURIComponent(q.value)).join('&');
           }
-
-          // STRATEGY 1: Resolve path and use router
-          const path = this._getPagePath(link.pageId);
-          if (path) {
-            const fullUrl = path + qs;
-            try {
-              const router = wwLib.getRouter?.() || wwLib.getFrontRouter?.();
-              if (router) { router.push(fullUrl); return; }
-            } catch (e) {}
-            window.location.href = fullUrl;
-            return;
-          }
-
-          // STRATEGY 2: wwLib.wwApp.goTo with path from pages lookup
           const goTo = wwLib.wwApp?.goTo || wwLib.goTo;
           if (goTo) {
             goTo(link.pageId);
@@ -326,7 +311,6 @@ export default {
         }
       } catch (e) {
         console.warn('[Menu] navigateTo error:', e);
-        if (link.href) window.location.href = link.href;
       }
     },
     closeMobile() { this.$emit('trigger-event', { name: 'overlayClick' }); },
