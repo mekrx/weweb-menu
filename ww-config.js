@@ -1,120 +1,67 @@
 export default {
     editor: {
-        label: { en: 'CRM Navigation Menu', pl: 'Menu nawigacyjne CRM' },
+        label: { en: 'CRM Navigation Menu' },
         icon: 'layout',
         customStylePropertiesOrder: [
             ['theme'],
             ['supabaseUrl', 'supabaseAnonKey'],
             ['isSidebarCollapsed', 'isMobileMenuOpen'],
-            ['activeNavUrl'],
             ['sidebarWidth', 'sidebarCollapsedWidth', 'topbarHeight'],
-            ['animationDuration', 'animationTimingFunction'],
+            ['animationDuration'],
             ['sidebarTitle'],
             ['showUserBlock', 'logoutLabel'],
-            ['nav1Label', 'nav1Icon', 'nav1Url'],
-            ['nav2Label', 'nav2Icon', 'nav2Url'],
-            ['nav3Label', 'nav3Icon', 'nav3Url'],
-            ['nav4Label', 'nav4Icon', 'nav4Url'],
-            ['nav5Label', 'nav5Icon', 'nav5Url'],
-            ['nav6Label', 'nav6Icon', 'nav6Url'],
-            ['nav7Label', 'nav7Icon', 'nav7Url'],
-            ['nav8Label', 'nav8Icon', 'nav8Url'],
+            ['nav1Label', 'nav1Url'],
+            ['nav2Label', 'nav2Url'],
+            ['nav3Label', 'nav3Url'],
+            ['nav4Label', 'nav4Url'],
+            ['nav5Label', 'nav5Url'],
+            ['nav6Label', 'nav6Url'],
+            ['nav7Label', 'nav7Url'],
+            ['nav8Label', 'nav8Url'],
         ]
     },
     triggerEvents: [
         { name: 'overlayClick', label: { en: 'On overlay click (close mobile menu)' }, event: {} },
-        { name: 'themeChange', label: { en: 'On theme change' }, event: { theme: '' } },
+        { name: 'themeChange', label: { en: 'On theme toggle' }, event: { theme: '' } },
         { name: 'logout', label: { en: 'On logout click' }, event: {} },
         { name: 'navClick', label: { en: 'On nav item click' }, event: { url: '', label: '', index: 0 } },
-        { name: 'collapseToggle', label: { en: 'On sidebar collapse toggle' }, event: { collapsed: false } },
+        { name: 'collapseToggle', label: { en: 'On sidebar collapse/expand' }, event: { collapsed: false } },
     ],
     properties: {
-        // Dropzones — only keep what's needed
         menuToggleZone: { type: 'Array', hidden: true, defaultValue: [] },
         sidebarZone: { type: 'Array', hidden: true, defaultValue: [] },
 
-        // Theme
-        theme: {
-            label: { en: 'Theme', pl: 'Motyw' },
-            type: 'TextSelect',
-            options: { options: [
-                { value: 'dark', label: { en: 'Dark' } },
-                { value: 'light', label: { en: 'Light' } },
-            ]},
-            defaultValue: 'dark', bindable: true, responsive: true,
-        },
-
-        // Supabase
+        theme: { label: { en: 'Тема' }, type: 'TextSelect', options: { options: [{ value: 'dark', label: { en: 'Тёмная' } }, { value: 'light', label: { en: 'Светлая' } }] }, defaultValue: 'dark', bindable: true, responsive: true },
         supabaseUrl: { label: { en: 'Supabase URL' }, type: 'Text', defaultValue: '', bindable: true, section: 'settings' },
         supabaseAnonKey: { label: { en: 'Supabase Anon Key' }, type: 'Text', defaultValue: '', bindable: true, section: 'settings' },
 
-        // State
-        isSidebarCollapsed: { label: { en: 'Sidebar collapsed (PC)' }, type: 'OnOff', defaultValue: false, bindable: true },
-        isMobileMenuOpen: { label: { en: 'Mobile menu open' }, type: 'OnOff', defaultValue: false, bindable: true },
-        activeNavUrl: { label: { en: 'Active page URL' }, type: 'Text', defaultValue: '', bindable: true },
+        isSidebarCollapsed: { label: { en: 'Свернуть сайдбар (ПК)' }, type: 'OnOff', defaultValue: false, bindable: true },
+        isMobileMenuOpen: { label: { en: 'Открыть меню (мобильное)' }, type: 'OnOff', defaultValue: false, bindable: true },
 
-        // Dimensions
-        sidebarWidth: { label: { en: 'Sidebar width' }, type: 'Length', options: { unitChoices: [{ value: 'px', label: 'px', min: 180, max: 360 }] }, defaultValue: '260px', bindable: true, responsive: true },
-        sidebarCollapsedWidth: { label: { en: 'Collapsed width' }, type: 'Length', options: { unitChoices: [{ value: 'px', label: 'px', min: 48, max: 120 }] }, defaultValue: '68px', bindable: true, responsive: true },
-        topbarHeight: { label: { en: 'Mobile topbar height' }, type: 'Length', options: { unitChoices: [{ value: 'px', label: 'px', min: 0, max: 80 }] }, defaultValue: '52px', bindable: true, responsive: true },
+        sidebarWidth: { label: { en: 'Ширина сайдбара' }, type: 'Length', options: { unitChoices: [{ value: 'px', label: 'px', min: 180, max: 320 }] }, defaultValue: '240px', bindable: true, responsive: true },
+        sidebarCollapsedWidth: { label: { en: 'Ширина в свёрнутом виде' }, type: 'Length', options: { unitChoices: [{ value: 'px', label: 'px', min: 48, max: 100 }] }, defaultValue: '64px', bindable: true, responsive: true },
+        topbarHeight: { label: { en: 'Высота панели (моб.)' }, type: 'Length', options: { unitChoices: [{ value: 'px', label: 'px', min: 40, max: 80 }] }, defaultValue: '52px', bindable: true, responsive: true },
+        animationDuration: { label: { en: 'Скорость анимации' }, type: 'Length', options: { unitChoices: [{ value: 'ms', label: 'ms', min: 0, max: 800 }] }, defaultValue: '200ms', bindable: true },
 
-        // Animation
-        animationDuration: { label: { en: 'Animation speed' }, type: 'Length', options: { unitChoices: [{ value: 'ms', label: 'ms', min: 0, max: 1000 }] }, defaultValue: '250ms', bindable: true, responsive: true },
-        animationTimingFunction: {
-            label: { en: 'Animation ease' }, type: 'TextSelect',
-            options: { options: [
-                { value: 'cubic-bezier(0.16,1,0.3,1)', label: { en: 'Smooth' } },
-                { value: 'ease', label: { en: 'Ease' } },
-                { value: 'ease-in-out', label: { en: 'Ease In Out' } },
-            ]},
-            defaultValue: 'cubic-bezier(0.16,1,0.3,1)', bindable: true,
-        },
+        sidebarTitle: { label: { en: 'Заголовок сайдбара' }, type: 'Text', defaultValue: 'CRM Panel', bindable: true },
+        showUserBlock: { label: { en: 'Блок пользователя' }, type: 'OnOff', defaultValue: true, bindable: true },
+        logoutLabel: { label: { en: 'Текст выхода' }, type: 'Text', defaultValue: 'Выйти', bindable: true },
 
-        // Sidebar brand
-        sidebarTitle: { label: { en: 'Sidebar title' }, type: 'Text', defaultValue: 'CRM Panel', bindable: true },
-
-        // User block
-        showUserBlock: { label: { en: 'Show user block' }, type: 'OnOff', defaultValue: true, bindable: true },
-        logoutLabel: { label: { en: 'Logout text' }, type: 'Text', defaultValue: 'Wyloguj', bindable: true },
-
-        // === NAV ITEMS (1-8) ===
-        ..._navItemProps(1, 'Dashboard', 'dashboard', '/dashboard'),
-        ..._navItemProps(2, 'Admin', 'settings', '/admin'),
-        ..._navItemProps(3, 'Klienci', 'users', '/clients'),
-        ..._navItemProps(4, '', 'folder', ''),
-        ..._navItemProps(5, '', 'chart', ''),
-        ..._navItemProps(6, '', 'mail', ''),
-        ..._navItemProps(7, '', 'file', ''),
-        ..._navItemProps(8, '', 'star', ''),
+        nav1Label: { label: { en: 'Навигация 1 — Название' }, type: 'Text', defaultValue: 'Dashboard', bindable: true },
+        nav1Url: { label: { en: 'Навигация 1 — URL' }, type: 'Text', defaultValue: '/dashboard', bindable: true },
+        nav2Label: { label: { en: 'Навигация 2 — Название' }, type: 'Text', defaultValue: 'Админ панель', bindable: true },
+        nav2Url: { label: { en: 'Навигация 2 — URL' }, type: 'Text', defaultValue: '/admin', bindable: true },
+        nav3Label: { label: { en: 'Навигация 3 — Название' }, type: 'Text', defaultValue: 'Клиенты', bindable: true },
+        nav3Url: { label: { en: 'Навигация 3 — URL' }, type: 'Text', defaultValue: '/clients', bindable: true },
+        nav4Label: { label: { en: 'Навигация 4 — Название' }, type: 'Text', defaultValue: '', bindable: true },
+        nav4Url: { label: { en: 'Навигация 4 — URL' }, type: 'Text', defaultValue: '', bindable: true },
+        nav5Label: { label: { en: 'Навигация 5 — Название' }, type: 'Text', defaultValue: '', bindable: true },
+        nav5Url: { label: { en: 'Навигация 5 — URL' }, type: 'Text', defaultValue: '', bindable: true },
+        nav6Label: { label: { en: 'Навигация 6 — Название' }, type: 'Text', defaultValue: '', bindable: true },
+        nav6Url: { label: { en: 'Навигация 6 — URL' }, type: 'Text', defaultValue: '', bindable: true },
+        nav7Label: { label: { en: 'Навигация 7 — Название' }, type: 'Text', defaultValue: '', bindable: true },
+        nav7Url: { label: { en: 'Навигация 7 — URL' }, type: 'Text', defaultValue: '', bindable: true },
+        nav8Label: { label: { en: 'Навигация 8 — Название' }, type: 'Text', defaultValue: '', bindable: true },
+        nav8Url: { label: { en: 'Навигация 8 — URL' }, type: 'Text', defaultValue: '', bindable: true },
     }
 };
-
-function _navItemProps(n, defLabel, defIcon, defUrl) {
-    const iconOptions = [
-        { value: 'dashboard', label: { en: 'Dashboard' } },
-        { value: 'home', label: { en: 'Home' } },
-        { value: 'users', label: { en: 'Users' } },
-        { value: 'settings', label: { en: 'Settings' } },
-        { value: 'shield', label: { en: 'Shield' } },
-        { value: 'folder', label: { en: 'Folder' } },
-        { value: 'file', label: { en: 'File' } },
-        { value: 'mail', label: { en: 'Mail' } },
-        { value: 'calendar', label: { en: 'Calendar' } },
-        { value: 'chart', label: { en: 'Chart' } },
-        { value: 'database', label: { en: 'Database' } },
-        { value: 'bell', label: { en: 'Bell' } },
-        { value: 'search', label: { en: 'Search' } },
-        { value: 'star', label: { en: 'Star' } },
-        { value: 'list', label: { en: 'List' } },
-        { value: 'globe', label: { en: 'Globe' } },
-        { value: 'lock', label: { en: 'Lock' } },
-        { value: 'clock', label: { en: 'Clock' } },
-        { value: 'zap', label: { en: 'Zap' } },
-        { value: 'none', label: { en: '— None —' } },
-    ];
-    return {
-        [`nav${n}Label`]: { label: { en: `Nav ${n} — Label` }, type: 'Text', defaultValue: defLabel, bindable: true },
-        [`nav${n}Icon`]: { label: { en: `Nav ${n} — Icon` }, type: 'TextSelect', options: { options: iconOptions }, defaultValue: defIcon, bindable: true },
-        [`nav${n}Url`]: { label: { en: `Nav ${n} — URL` }, type: 'Text', defaultValue: defUrl, bindable: true },
-    };
-}
