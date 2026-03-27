@@ -305,10 +305,10 @@ export default {
             link.query.forEach(q => { if (q.name) queryObj[q.name] = q.value; });
           }
 
-          // Use wwLib.goTo (NOT wwLib.wwApp.goTo — that's deprecated and broken)
-          // Per WeWeb docs: wwLib.goTo('page_uuid', {queryName: 'queryValue'})
-          if (wwLib.goTo) {
-            wwLib.goTo(link.pageId, Object.keys(queryObj).length ? queryObj : undefined);
+          // wwLib.goTo is DEPRECATED — use wwLib.wwApp.goTo which resolves pageId to proper path
+          const goTo = wwLib.wwApp?.goTo || wwLib.goTo;
+          if (goTo) {
+            goTo(link.pageId, Object.keys(queryObj).length ? queryObj : undefined);
             return;
           }
         }
