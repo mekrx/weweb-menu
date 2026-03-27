@@ -137,6 +137,7 @@ export default {
     this.sidebarCollapsed = !!this.content?.isSidebarCollapsed;
     this.currentTheme = localStorage.getItem('app-theme') || this.content?.theme || 'dark';
     this.applyGlobalTheme();
+    localStorage.setItem('has-nav-menu', '1');
     window.addEventListener('resize', this.onResize);
     window.addEventListener('storage', this.onStorage);
     this.checkScroll();
