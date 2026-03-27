@@ -27,7 +27,7 @@
           <img v-if="currentLogo" :src="currentLogo" class="sb-logo" :style="{ height: content.logoSize || '28px' }" />
           <div class="sb-title" :style="{ fontSize: content.sidebarTitleSize || '16px' }">{{ content.sidebarTitle || '' }}</div>
         </template>
-        <img v-else-if="currentLogo" :src="currentLogo" class="sb-logo-mini" :style="{ height: content.logoSize || '28px' }" />
+        <!-- No logo in collapsed state to avoid overlapping toggle button -->
         <button v-if="!isMobile" class="sb-toggle" @click="toggleCollapse">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path :d="isCollapsed ? 'm9 18 6-6-6-6' : 'm15 18-6-6 6-6'"/></svg>
         </button>
@@ -300,8 +300,11 @@ export default {
           if (curPageId === link.pageId) return; // Same page, skip
 
           // Resolve pageId to path (e.g. 'home', 'admin-panel')
-          const pagePath = this._getPagePath(link.pageId);
+          let pagePath = this._getPagePath(link.pageId);
           if (!pagePath) return;
+
+          // Home page: WeWeb router expects '/' not '/home'
+          if (pagePath === '/home') pagePath = '/';
 
           // Build query object
           const queryObj = {};
