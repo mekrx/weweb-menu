@@ -21,7 +21,7 @@
       <!-- Brand -->
       <div class="sb-brand">
         <div v-if="!isCollapsed" class="sb-title">{{ content.sidebarTitle || '' }}</div>
-        <button v-if="!isMobile" class="sb-toggle" @click="toggleCollapse" :title="isCollapsed ? 'Развернуть' : 'Свернуть'">
+        <button v-if="!isMobile" class="sb-toggle" @click="toggleCollapse" :title="isCollapsed ? 'Rozwiń' : 'Zwiń'">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path :d="isCollapsed ? 'm9 18 6-6-6-6' : 'm15 18-6-6 6-6'"/></svg>
         </button>
       </div>
@@ -43,7 +43,7 @@
       <button class="theme-btn" @click="toggleTheme">
         <svg v-if="currentTheme==='dark'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
         <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>
-        <span v-if="!isCollapsed" class="nav-label">{{ currentTheme === 'dark' ? 'Светлая тема' : 'Тёмная тема' }}</span>
+        <span v-if="!isCollapsed" class="nav-label">{{ currentTheme === 'dark' ? 'Jasny motyw' : 'Ciemny motyw' }}</span>
       </button>
 
       <!-- User -->
@@ -54,7 +54,7 @@
             <div class="user-name">{{ userName || '—' }}</div>
             <div class="user-email">{{ userEmail || '—' }}</div>
           </div>
-          <button class="logout-btn" @click="doLogout" :title="content.logoutLabel || 'Выйти'">
+          <button class="logout-btn" @click="doLogout" :title="content.logoutLabel || 'Wyloguj'">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
           </button>
         </template>
@@ -91,25 +91,25 @@ const SVG = {
 
 function matchIcon(label) {
   const l = (label || '').toLowerCase();
-  if (/dashboard|панель|обзор|главн/.test(l)) return 'dashboard';
-  if (/admin|админ|настрой|setting|управлен/.test(l)) return 'settings';
-  if (/user|пользовател|клиент|client|менеджер|сотрудн/.test(l)) return 'users';
-  if (/file|файл|документ|doc/.test(l)) return 'file';
-  if (/mail|почт|письм|email|сообщен/.test(l)) return 'mail';
-  if (/calendar|календар|расписан/.test(l)) return 'calendar';
-  if (/chart|график|статистик|аналитик|отчет|отчёт/.test(l)) return 'chart';
-  if (/folder|папк|каталог|архив/.test(l)) return 'folder';
-  if (/search|поиск/.test(l)) return 'search';
-  if (/bell|уведомл|оповещ/.test(l)) return 'bell';
-  if (/shield|безопас|защит/.test(l)) return 'shield';
-  if (/database|база|данн/.test(l)) return 'database';
-  if (/star|избран|важн|закладк/.test(l)) return 'star';
-  if (/list|список|задач|todo/.test(l)) return 'list';
-  if (/globe|мир|сайт|web/.test(l)) return 'globe';
-  if (/lock|блокир|доступ|пароль/.test(l)) return 'lock';
-  if (/clock|врем|час|истор|журнал|лог|аудит/.test(l)) return 'clock';
-  if (/home|дом|начал|стартов/.test(l)) return 'home';
-  if (/zap|быстр|молни|энерг/.test(l)) return 'zap';
+  if (/dashboard|panel|pulpit/.test(l)) return 'dashboard';
+  if (/admin|ustawien|setting|zarzadz|konfig/.test(l)) return 'settings';
+  if (/user|klient|client|pracowni|uzytkowni|menedz/.test(l)) return 'users';
+  if (/file|plik|dokument|doc/.test(l)) return 'file';
+  if (/mail|poczt|email|wiadomo/.test(l)) return 'mail';
+  if (/calendar|kalendarz|harmonogram/.test(l)) return 'calendar';
+  if (/chart|wykres|statystyk|analityk|raport/.test(l)) return 'chart';
+  if (/folder|folder|katalog|archiwum|teczk/.test(l)) return 'folder';
+  if (/search|szukaj|wyszuk/.test(l)) return 'search';
+  if (/bell|powiadomi|alert/.test(l)) return 'bell';
+  if (/shield|bezpiecz|ochron/.test(l)) return 'shield';
+  if (/database|baza|dane/.test(l)) return 'database';
+  if (/star|ulubion|wazn|zakladk/.test(l)) return 'star';
+  if (/list|lista|zadani|todo/.test(l)) return 'list';
+  if (/globe|swiat|stron|web/.test(l)) return 'globe';
+  if (/lock|blokad|dostep|haslo/.test(l)) return 'lock';
+  if (/clock|czas|histori|dziennik|log|audyt/.test(l)) return 'clock';
+  if (/home|dom|start|glown/.test(l)) return 'home';
+  if (/zap|szybk|blyskaw|energi/.test(l)) return 'zap';
   return 'circle';
 }
 
