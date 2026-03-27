@@ -34,19 +34,19 @@
           <div v-else-if="item.type === 'separator' && isCollapsed && i > 0" class="nav-sep-line"></div>
 
           <!-- Regular item -->
-          <a v-else-if="item.type === 'item'" class="nav-btn" :class="{ active: isNavActive(item) }" :href="getLinkHref(item.link) || 'javascript:void(0)'" @click.prevent="onNavClick(item, i)" :title="isCollapsed ? item.label : undefined">
+          <button v-else-if="item.type === 'item'" class="nav-btn" :class="{ active: isNavActive(item) }" @click="onNavClick(item, i)" :title="isCollapsed ? item.label : undefined">
             <span class="nav-icon" :style="{ width: content.navIconSize || '18px', height: content.navIconSize || '18px' }">
               <span v-if="resolvedIcons[i]" v-html="resolvedIcons[i]" class="icon-wrap"></span>
               <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
             </span>
             <span v-if="!isCollapsed" class="nav-label">{{ item.label }}</span>
-          </a>
+          </button>
 
           <!-- Child (sub-item) -->
-          <a v-else-if="item.type === 'child' && !isCollapsed" class="nav-child" :class="{ active: isNavActive(item) }" :href="getLinkHref(item.link) || 'javascript:void(0)'" @click.prevent="onNavClick(item, i)">
+          <button v-else-if="item.type === 'child' && !isCollapsed" class="nav-child" :class="{ active: isNavActive(item) }" @click="onNavClick(item, i)">
             <span class="child-dot"></span>
             <span class="nav-label">{{ item.label }}</span>
-          </a>
+          </button>
         </template>
       </nav>
 
@@ -201,50 +201,60 @@ export default {
       }
       if (item.link) this.navigateTo(item.link);
     },
-    getPagePath(pageId) {
+    navigateTo(link) {
+      if (!link) return;
       try {
-        if (typeof wwLib !== 'undefined' && wwLib.wwWebsiteData) {
-          const pages = wwLib.wwWebsiteData.pages || [];
-          const page = pages.find(p => p.id === pageId);
-          if (page) {
-            // Build path from page paths or linkId
-            const path = page.paths?.default || page.path || page.linkId || '';
-            return path.startsWith('/') ? path : '/' + path;
+        if (typeof wwLib !== 'undefined' && link.pageId) {
+          // Use wwLib.navigateTo which handles internal WeWeb navigation properly
+          if (wwLib.navigateTo) { wwLib.navigateTo(link); return; }
+          // Try changeRoute
+          if (wwLib.changeRoute) { wwLib.changeRoute(link); return; }
+          // Try goTo with full link object
+          if (wwLib.goTo) { wwLib.goTo(link); return; }
+          // Try Vue Router
+          const router = wwLib.getRouter?.() || wwLib.getFrontRouter?.() || wwLib.$router;
+          if (router) {
+            // Resolve page path
+            const path = this._resolvePath(link.pageId);
+            if (path) {
+              let url = path;
+              if (link.query && Object.keys(link.query).length) url += '?' + new URLSearchParams(link.query).toString();
+              router.push(url);
+              return;
+            }
+          }
+        }
+        // External links
+        if (link.href) {
+          if (link.targetBlank) window.open(link.href, '_blank');
+          else window.location.href = link.href;
+        }
+      } catch (e) {
+        console.warn('[Menu] navigateTo error:', e, 'link:', JSON.stringify(link));
+        if (link.href) window.location.href = link.href;
+      }
+    },
+    _resolvePath(pageId) {
+      try {
+        const wd = wwLib?.wwWebsiteData;
+        if (!wd) return null;
+        // pages could be object or array
+        const src = [
+          wd.pages, wd.design?.pages,
+          Object.values(wd.pages || {}), Object.values(wd.design?.pages || {}),
+        ];
+        for (const ps of src) {
+          if (!ps) continue;
+          const arr = Array.isArray(ps) ? ps : (typeof ps === 'object' ? [ps] : []);
+          for (const p of arr) {
+            if (p && p.id === pageId) {
+              const path = p.paths?.default || p.path || p.linkId || p.name;
+              if (path) return path.startsWith('/') ? path : '/' + path;
+            }
           }
         }
       } catch (e) {}
       return null;
-    },
-    getLinkHref(link) {
-      if (!link) return null;
-      if (link.href) return link.href;
-      if (link.pageId) {
-        const path = this.getPagePath(link.pageId);
-        if (path) {
-          let href = path;
-          if (link.query && Object.keys(link.query).length) {
-            const params = new URLSearchParams(link.query).toString();
-            href += '?' + params;
-          }
-          return href;
-        }
-      }
-      return null;
-    },
-    navigateTo(link) {
-      if (!link) return;
-      const href = this.getLinkHref(link);
-      if (href) {
-        if (link.targetBlank) { window.open(href, '_blank'); return; }
-        // Use WeWeb router if available
-        try {
-          if (typeof wwLib !== 'undefined' && wwLib.getRouter) {
-            wwLib.getRouter().push(href);
-            return;
-          }
-        } catch (e) {}
-        window.location.href = href;
-      }
     },
     closeMobile() { this.$emit('trigger-event', { name: 'overlayClick' }); },
 
