@@ -9,6 +9,7 @@ export default {
             ['sidebarWidth', 'sidebarCollapsedWidth', 'topbarHeight'],
             ['animationDuration'],
             ['sidebarTitle', 'sidebarTitleSize'],
+            ['logoDark', 'logoLight', 'logoSize'],
             ['showUserBlock', 'logoutLabel', 'logoutRedirect'],
             ['navIconSize'],
             ['navItems'],
@@ -40,12 +41,16 @@ export default {
         sidebarTitle: { label: { en: 'Sidebar title' }, type: 'Text', defaultValue: 'CRM Panel', bindable: true },
         sidebarTitleSize: { label: { en: 'Title font size' }, type: 'Length', options: { unitChoices: [{ value: 'px', label: 'px', min: 10, max: 32 }] }, defaultValue: '16px', bindable: true, responsive: true },
 
+        // Logo
+        logoDark: { label: { en: 'Logo (dark theme)' }, type: 'Image', bindable: true },
+        logoLight: { label: { en: 'Logo (light theme)' }, type: 'Image', bindable: true },
+        logoSize: { label: { en: 'Logo size' }, type: 'Length', options: { unitChoices: [{ value: 'px', label: 'px', min: 16, max: 64 }] }, defaultValue: '28px', bindable: true, responsive: true },
+
         showUserBlock: { label: { en: 'Show user block' }, type: 'OnOff', defaultValue: true, bindable: true },
         logoutLabel: { label: { en: 'Logout text' }, type: 'Text', defaultValue: 'Wyloguj', bindable: true },
         logoutRedirect: { label: { en: 'Logout redirect page' }, type: 'Link', bindable: true },
         navIconSize: { label: { en: 'Nav icon size' }, type: 'Length', options: { unitChoices: [{ value: 'px', label: 'px', min: 10, max: 32 }] }, defaultValue: '18px', bindable: true, responsive: true },
 
-        // === FLAT NAV LIST — one level, type determines behavior ===
         navItems: {
             label: { en: 'Navigation items' },
             type: 'Array',
@@ -66,22 +71,17 @@ export default {
                             type: {
                                 label: { en: 'Type' },
                                 type: 'TextSelect',
-                                options: {
-                                    options: [
-                                        { value: 'item', label: { en: 'Nav item' } },
-                                        { value: 'separator', label: { en: 'Section separator' } },
-                                        { value: 'child', label: { en: 'Sub-item' } },
-                                    ]
-                                },
+                                options: { options: [
+                                    { value: 'item', label: { en: 'Nav item' } },
+                                    { value: 'separator', label: { en: 'Section separator' } },
+                                    { value: 'child', label: { en: 'Sub-item' } },
+                                ]},
                             },
-                            label: {
-                                label: { en: 'Label' },
-                                type: 'Text',
-                            },
+                            label: { label: { en: 'Label' }, type: 'Text' },
                             icon: {
                                 label: { en: 'Icon' },
                                 type: 'SystemIcon',
-                                hidden: (content) => content.type === 'separator' || content.type === 'child',
+                                hidden: (content) => content.type === 'separator',
                             },
                             link: {
                                 label: { en: 'Link' },
