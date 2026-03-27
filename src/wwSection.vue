@@ -194,7 +194,8 @@ export default {
       this.$emit('trigger-event', { name: 'navClick', event: { url: item.link?.href || '', label: item.label, index: i } });
       if (this.isMobile) this.closeMobile();
       // Send adminTab via localStorage + CustomEvent before navigation
-      const adminTab = item.link?.query?.adminTab;
+      const q = item.link?.query;
+      const adminTab = Array.isArray(q) ? q.find(x => x.name === 'adminTab')?.value : q?.adminTab;
       if (adminTab) {
         localStorage.setItem('pendingAdminTab', adminTab);
         window.dispatchEvent(new CustomEvent('admin-set-tab', { detail: { adminTab } }));
@@ -205,23 +206,22 @@ export default {
       if (!link) return;
       try {
         if (typeof wwLib !== 'undefined' && link.pageId) {
-          // Use wwLib.navigateTo which handles internal WeWeb navigation properly
-          if (wwLib.navigateTo) { wwLib.navigateTo(link); return; }
-          // Try changeRoute
-          if (wwLib.changeRoute) { wwLib.changeRoute(link); return; }
-          // Try goTo with full link object
-          if (wwLib.goTo) { wwLib.goTo(link); return; }
-          // Try Vue Router
-          const router = wwLib.getRouter?.() || wwLib.getFrontRouter?.() || wwLib.$router;
-          if (router) {
-            // Resolve page path
-            const path = this._resolvePath(link.pageId);
-            if (path) {
-              let url = path;
-              if (link.query && Object.keys(link.query).length) url += '?' + new URLSearchParams(link.query).toString();
-              router.push(url);
-              return;
-            }
+          // Build query string from WeWeb format [{name,value}]
+          let qs = '';
+          if (Array.isArray(link.query) && link.query.length) {
+            qs = '?' + link.query.map(q => encodeURIComponent(q.name) + '=' + encodeURIComponent(q.value)).join('&');
+          } else if (link.query && typeof link.query === 'object' && !Array.isArray(link.query)) {
+            const entries = Object.entries(link.query);
+            if (entries.length) qs = '?' + entries.map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
+          }
+
+          // Use wwLib.wwApp.goTo (current API) with pageId string
+          const goTo = wwLib.wwApp?.goTo || wwLib.goTo;
+          if (goTo) {
+            goTo(link.pageId);
+            // Apply query after navigation
+            if (qs) setTimeout(() => { window.history.replaceState(null, '', window.location.pathname + qs); }, 100);
+            return;
           }
         }
         // External links
